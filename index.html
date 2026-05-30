@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量文本替换工具 - BatchTextReplacer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+        .file选择 {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .file-item {
+            flex: 1;
+            min-width: 280px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .file-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+        .file-item input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        .file-name {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6c757d;
+            word-break: break-all;
+        }
+        .rules-container {
+            display: flex;
+            gap: 15px;
+        }
+        .rules-list-wrapper {
+            flex: 1;
+            min-height: 200px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .rules-list {
+            height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .rule-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            background: #f1f3f5;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .rule-item:hover {
+            background: #e9ecef;
+        }
+        .rule-item.selected {
+            background: #d0ebff;
+            border: 1px solid #339af0;
+        }
+        .rule-item span {
+            flex: 1;
+            word-break: break-all;
+        }
+        .rule-item .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .rules-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a6fd6;
+        }
+        .btn-danger {
+            background: #fa5252;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #e03131;
+        }
+        .btn-success {
+            background: #40c057;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #37b24d;
+        }
+        .btn-secondary {
+            background: #868e96;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #495057;
+        }
+        .add-rule-form {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #495057;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .options {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn-execute {
+            padding: 15px 50px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-execute:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .status.ready {
+            background: #e7f5ff;
+            color: #1971c2;
+        }
+        .status.success {
+            background: #d3f9d8;
+            color: #2b8a3e;
+        }
+        .status.error {
+            background: #fff5f5;
+            color: #c92a2a;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+        .progress-bar.active {
+            display: block;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        .preview-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff9db;
+            border: 1px solid #fcc419;
+            border-radius: 8px;
+            display: none;
+        }
+        .preview-section.active {
+            display: block;
+        }
+        .preview-title {
+            font-weight: bold;
+            color: #e67700;
+            margin-bottom: 10px;
+        }
+        .preview-content {
+            font-size: 14px;
+            color: #495057;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .preview-item {
+            padding: 5px 0;
+            border-bottom: 1px dashed #fcc419;
+        }
+        .preview-item:last-child {
+            border-bottom: none;
+        }
+        .file-content-area {
+            margin-top: 15px;
+        }
+        .file-content-area textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: "Consolas", "Microsoft YaHei", monospace;
+        }
+        .file-content-area label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .info-text {
+            font-size: 12px;
+            color: #868e96;
+            margin-top: 8px;
+        }
+        .empty-message {
+            text-align: center;
+            color: #adb5bd;
+            padding: 60px 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>批量文本替换工具</h1>
+            <p>BatchTextReplacer - 高效、易用的文本批量替换解决方案</p>
+        </div>
+        <div class="content">
+            <div class="section">
+                <div class="section-title">📁 文件选择</div>
+                <div class="file选择">
+                    <div class="file-item">
+                        <label>选择源文件</label>
+                        <input type="file" id="sourceFile" accept=".txt,.text">
+                        <div class="file-name" id="sourceFileName">未选择文件</div>
+                        <div class="info-text">支持 .txt 文本文件</div>
+                    </div>
+                    <div class="file-item">
+                        <label>选择输出文件</label>
+                        <input type="file" id="outputFile" accept=".txt,.text" webkitdirectory>
+                        <div class="file-name" id="outputFileName">未选择文件</div>
+                        <div class="info-text">选择保存位置</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📝 替换规则 (原文本 → 新文本)</div>
+                <div class="rules-container">
+                    <div class="rules-list-wrapper">
+                        <div class="rules-list" id="rulesList">
+                            <div class="empty-message">暂无替换规则<br>点击下方按钮添加</div>
+                        </div>
+                    </div>
+                    <div class="rules-actions">
+                        <button class="btn btn-primary" onclick="showAddRuleForm()">➕ 添加规则</button>
+                        <button class="btn btn-danger" onclick="deleteSelectedRule()">🗑️ 删除选中</button>
+                        <button class="btn btn-secondary" onclick="clearAllRules()">🧹 清空规则</button>
+                        <button class="btn btn-success" onclick="importRules()">📥 导入规则</button>
+                    </div>
+                </div>
+                <div class="add-rule-form" id="addRuleForm" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>原文本</label>
+                            <input type="text" id="oldText" placeholder="输入要替换的文本">
+                        </div>
+                        <div class="form-group">
+                            <label>新文本</label>
+                            <input type="text" id="newText" placeholder="输入替换后的文本">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addRule()">确认添加</button>
+                    <button class="btn btn-secondary" onclick="hideAddRuleForm()">取消</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">⚙️ 选项</div>
+                <div class="options">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="useRegex">
+                        <span>使用正则表达式</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="caseSensitive" checked>
+                        <span>区分大小写</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="previewEnabled" checked>
+                        <span>替换前预览</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="preview-section" id="previewSection">
+                <div class="preview-title">🔍 替换预览</div>
+                <div class="preview-content" id="previewContent"></div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+
+            <div class="status ready" id="status">✅ 就绪</div>
+
+            <div class="action-buttons">
+                <button class="btn-execute" onclick="executeReplace()">🚀 开始替换</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rules = [];
+        let sourceContent = '';
+        let selectedRuleIndex = -1;
+
+        document.getElementById('sourceFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('sourceFileName').textContent = file.name;
+                document.getElementById('sourceFileName').style.color = '#495057';
+                sourceContent = await file.text();
+                updateStatus('ready', '✅ 文件已加载：' + file.name);
+            }
+        });
+
+        document.getElementById('outputFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('outputFileName').textContent = file.name;
+                document.getElementById('outputFileName').style.color = '#495057';
+            }
+        });
+
+        function showAddRuleForm() {
+            document.getElementById('addRuleForm').style.display = 'block';
+            document.getElementById('oldText').focus();
+        }
+
+        function hideAddRuleForm() {
+            document.getElementById('addRuleForm').style.display = 'none';
+            document.getElementById('oldText').value = '';
+            document.getElementById('newText').value = '';
+        }
+
+        function addRule() {
+            const oldText = document.getElementById('oldText').value;
+            const newText = document.getElementById('newText').value;
+
+            if (!oldText) {
+                alert('原文本不能为空！');
+                return;
+            }
+
+            rules.push({ old: oldText, new: newText });
+            renderRules();
+            hideAddRuleForm();
+            updateStatus('ready', '✅ 规则已添加，共 ' + rules.length + ' 条规则');
+        }
+
+        function renderRules() {
+            const rulesList = document.getElementById('rulesList');
+
+            if (rules.length === 0) {
+                rulesList.innerHTML = '<div class="empty-message">暂无替换规则<br>点击下方按钮添加</div>';
+                return;
+            }
+
+            rulesList.innerHTML = rules.map((rule, index) => `
+                <div class="rule-item ${index === selectedRuleIndex ? 'selected' : ''}" 
+                     onclick="selectRule(${index})" 
+                     data-index="${index}">
+                    <span>「${escapeHtml(rule.old)}」→ 「${escapeHtml(rule.new)}」</span>
+                    <button class="delete-btn" onclick="event.stopPropagation(); deleteRule(${index})">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function selectRule(index) {
+            selectedRuleIndex = index;
+            renderRules();
+        }
+
+        function deleteRule(index) {
+            rules.splice(index, 1);
+            if (selectedRuleIndex >= rules.length) {
+                selectedRuleIndex = rules.length - 1;
+            }
+            renderRules();
+            updateStatus('ready', '✅ 规则已删除，剩余 ' + rules.length + ' 条规则');
+        }
+
+        function deleteSelectedRule() {
+            if (selectedRuleIndex >= 0 && selectedRuleIndex < rules.length) {
+                deleteRule(selectedRuleIndex);
+            } else {
+                alert('请先选中要删除的规则！');
+            }
+        }
+
+        function clearAllRules() {
+            if (rules.length === 0) return;
+            if (confirm('确定要清空所有规则吗？')) {
+                rules = [];
+                selectedRuleIndex = -1;
+                renderRules();
+                updateStatus('ready', '✅ 所有规则已清空');
+            }
+        }
+
+        function importRules() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt';
+            input.onchange = async function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                try {
+                    const content = await file.text();
+                    const lines = content.split('\n');
+                    let count = 0;
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed.includes('→')) {
+                            const parts = trimmed.split('→');
+                            if (parts.length === 2) {
+                                rules.push({
+                                    old: parts[0].trim(),
+                                    new: parts[1].trim()
+                                });
+                                count++;
+                            }
+                        }
+                    }
+
+                    renderRules();
+                    alert('成功导入 ' + count + ' 条规则！');
+                    updateStatus('ready', '✅ 成功导入 ' + count + ' 条规则');
+                } catch (error) {
+                    alert('导入失败：' + error.message);
+                    updateStatus('error', '❌ 导入失败');
+                }
+            };
+            input.click();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function executeReplace() {
+            if (!sourceContent) {
+                alert('请先选择源文件！');
+                updateStatus('error', '❌ 请先选择源文件');
+                return;
+            }
+
+            if (rules.length === 0) {
+                alert('请至少添加一条替换规则！');
+                updateStatus('error', '❌ 请添加至少一条替换规则');
+                return;
+            }
+
+            const useRegex = document.getElementById('useRegex').checked;
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            const previewEnabled = document.getElementById('previewEnabled').checked;
+
+            let content = sourceContent;
+            let previewText = '替换预览：\n\n';
+
+            for (const rule of rules) {
+                let count = 0;
+
+                if (useRegex) {
+                    const flags = caseSensitive ? 'g' : 'gi';
+                    const regex = new RegExp(escapeRegex(rule.old), flags);
+                    const matches = content.match(regex);
+                    count = matches ? matches.length : 0;
+                } else {
+                    if (caseSensitive) {
+                        count = (content.split(rule.old)).length - 1;
+                    } else {
+                        const lowerContent = content.toLowerCase();
+                        const lowerOld = rule.old.toLowerCase();
+                        count = (lowerContent.split(lowerOld)).length - 1;
+                    }
+                }
+
+                previewText += `「${rule.old}」→「${rule.new}」替换 ${count} 处\n`;
+            }
+
+            previewText += `\n共 ${rules.length} 条规则，是否继续？`;
+
+            if (previewEnabled) {
+                document.getElementById('previewContent').innerHTML = previewText
+                    .split('\n')
+                    .map(line => `<div class="preview-item">${escapeHtml(line)}</div>`)
+                    .join('');
+                document.getElementById('previewSection').classList.add('active');
+
+                if (!confirm(previewText)) {
+                    return;
+                }
+            }
+
+            document.getElementById('previewSection').classList.remove('active');
+            document.getElementById('progressBar').classList.add('active');
+
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            try {
+                for (let i = 0; i < rules.length; i++) {
+                    const rule = rules[i];
+                    let newContent;
+
+                    if (useRegex) {
+                        const flags = caseSensitive ? 'g' : 'gi';
+                        const regex = new RegExp(escapeRegex(rule.old), flags);
+                        newContent = content.replace(regex, rule.new);
+                    } else {
+                        if (caseSensitive) {
+                            newContent = content.split(rule.old).join(rule.new);
+                        } else {
+                            const regex = new RegExp(escapeRegex(rule.old), 'gi');
+                            newContent = content.replace(regex, rule.new);
+                        }
+                    }
+
+                    content = newContent;
+
+                    const progress = ((i + 1) / rules.length) * 100;
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = Math.round(progress) + '%';
+
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+
+                const outputFile = document.getElementById('outputFile').files[0];
+                if (outputFile) {
+                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = outputFile.name || 'output.txt';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'replaced_output.txt';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+
+                updateStatus('success', '🎉 替换完成！');
+                progressFill.textContent = '100%';
+                progressFill.style.width = '100%';
+
+            } catch (error) {
+                updateStatus('error', '❌ 处理失败：' + error.message);
+            }
+
+            setTimeout(() => {
+                progressBar.classList.remove('active');
+            }, 2000);
+        }
+
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function updateStatus(type, message) {
+            const status = document.getElementById('status');
+            status.className = 'status ' + type;
+            status.textContent = message;
+        }
+    </script>
+</body>
+</html>
