@@ -47,13 +47,6 @@
             color: #333;
             margin-bottom: 10px;
         }
-        .file-row {
-            display: flex;
-            gap: 20px;
-        }
-        .file-item {
-            flex: 1;
-        }
         .file-item label {
             display: block;
             margin-bottom: 5px;
@@ -276,17 +269,10 @@
         <div class="content">
             <div class="section">
                 <div class="section-title">文件选择</div>
-                <div class="file-row">
-                    <div class="file-item">
-                        <label>源文件</label>
-                        <input type="file" id="sourceFile" accept=".txt,.text">
-                        <div class="file-name" id="sourceFileName">未选择</div>
-                    </div>
-                    <div class="file-item">
-                        <label>输出文件</label>
-                        <input type="file" id="outputFile" accept=".txt,.text" webkitdirectory>
-                        <div class="file-name" id="outputFileName">未选择</div>
-                    </div>
+                <div class="file-item">
+                    <label>源文件</label>
+                    <input type="file" id="sourceFile" accept=".txt,.text">
+                    <div class="file-name" id="sourceFileName">未选择</div>
                 </div>
             </div>
 
@@ -365,17 +351,8 @@
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('sourceFileName').textContent = file.name;
-                document.getElementById('sourceFileName').style.color = '#495057';
                 sourceContent = await file.text();
-                updateStatus('ready', '✅ 文件已加载：' + file.name);
-            }
-        });
-
-        document.getElementById('outputFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('outputFileName').textContent = file.name;
-                document.getElementById('outputFileName').style.color = '#495057';
+                updateStatus('文件已加载：' + file.name);
             }
         });
 
@@ -395,21 +372,21 @@
             const newText = document.getElementById('newText').value;
 
             if (!oldText) {
-                alert('原文本不能为空！');
+                alert('原文本不能为空');
                 return;
             }
 
             rules.push({ old: oldText, new: newText });
             renderRules();
             hideAddRuleForm();
-            updateStatus('ready', '✅ 规则已添加，共 ' + rules.length + ' 条规则');
+            updateStatus('ready', '已添加 ' + rules.length + ' 条规则');
         }
 
         function renderRules() {
             const rulesList = document.getElementById('rulesList');
 
             if (rules.length === 0) {
-                rulesList.innerHTML = '<div class="empty-message">暂无替换规则<br>点击下方按钮添加</div>';
+                rulesList.innerHTML = '<div class="empty-message">暂无规则</div>';
                 return;
             }
 
@@ -434,24 +411,24 @@
                 selectedRuleIndex = rules.length - 1;
             }
             renderRules();
-            updateStatus('ready', '✅ 规则已删除，剩余 ' + rules.length + ' 条规则');
+            updateStatus('ready', '已删除，剩余 ' + rules.length + ' 条规则');
         }
 
         function deleteSelectedRule() {
             if (selectedRuleIndex >= 0 && selectedRuleIndex < rules.length) {
                 deleteRule(selectedRuleIndex);
             } else {
-                alert('请先选中要删除的规则！');
+                alert('请先选中要删除的规则');
             }
         }
 
         function clearAllRules() {
             if (rules.length === 0) return;
-            if (confirm('确定要清空所有规则吗？')) {
+            if (confirm('确定清空所有规则')) {
                 rules = [];
                 selectedRuleIndex = -1;
                 renderRules();
-                updateStatus('ready', '✅ 所有规则已清空');
+                updateStatus('ready', '已清空所有规则');
             }
         }
 
@@ -483,11 +460,11 @@
                     }
 
                     renderRules();
-                    alert('成功导入 ' + count + ' 条规则！');
-                    updateStatus('ready', '✅ 成功导入 ' + count + ' 条规则');
+                    alert('成功导入 ' + count + ' 条规则');
+                    updateStatus('ready', '已导入 ' + count + ' 条规则');
                 } catch (error) {
                     alert('导入失败：' + error.message);
-                    updateStatus('error', '❌ 导入失败');
+                    updateStatus('error', '导入失败');
                 }
             };
             input.click();
@@ -501,14 +478,14 @@
 
         async function executeReplace() {
             if (!sourceContent) {
-                alert('请先选择源文件！');
-                updateStatus('error', '❌ 请先选择源文件');
+                alert('请先选择源文件');
+                updateStatus('error', '请先选择源文件');
                 return;
             }
 
             if (rules.length === 0) {
-                alert('请至少添加一条替换规则！');
-                updateStatus('error', '❌ 请添加至少一条替换规则');
+                alert('请至少添加一条替换规则');
+                updateStatus('error', '请添加至少一条替换规则');
                 return;
             }
 
@@ -540,7 +517,7 @@
                 previewText += `「${rule.old}」→「${rule.new}」替换 ${count} 处\n`;
             }
 
-            previewText += `\n共 ${rules.length} 条规则，是否继续？`;
+            previewText += `\n共 ${rules.length} 条规则，是否继续`;
 
             if (previewEnabled) {
                 document.getElementById('previewContent').innerHTML = previewText
@@ -587,31 +564,20 @@
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
 
-                const outputFile = document.getElementById('outputFile').files[0];
-                if (outputFile) {
-                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = outputFile.name || 'output.txt';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                } else {
-                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'replaced_output.txt';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'replaced_output.txt';
+                a.click();
+                URL.revokeObjectURL(url);
 
-                updateStatus('success', '🎉 替换完成！');
+                updateStatus('success', '替换完成');
                 progressFill.textContent = '100%';
                 progressFill.style.width = '100%';
 
             } catch (error) {
-                updateStatus('error', '❌ 处理失败：' + error.message);
+                updateStatus('error', '处理失败：' + error.message);
             }
 
             setTimeout(() => {
